@@ -1,24 +1,46 @@
-#!/usr/bin/env bash
+he script is run on Linux machine
+test_TASKID
+TASKID: 22
+VAR_1: 0
+VAR_2: 0
+TASKID is 22
+test_VAR_1_case1
+TASKID: 22
+VAR_1: 0
+VAR_2: 0
+VAR_1 is 0
+ASSERT:Wrong value of VAR_1! expected:<251384> but was:<0>
+test_VAR_2_case1
+TASKID: 22
+VAR_1: 0
+VAR_2: 0
+VAR_2 is 0
+ASSERT:Wrong value of VAR_2! expected:<1457> but was:<0>
+test_results_file_case1
+TASKID: 22
+VAR_1: 0
+VAR_2: 0
+MD5 is d41d8cd98f00b204e9800998ecf8427e
+ASSERT:File 'results.txt' has wrong contents! expected:<8713b8fa117346e9c17e2f15e5cdab52> but was:<d41d8cd98f00b204e9800998ecf8427e>
+test_VAR_1_case2
+TASKID: 22
+VAR_1: 0
+VAR_2: 0
+VAR_1 is 0
+ASSERT:Wrong value of VAR_1! expected:<858> but was:<0>
+test_VAR_2_case2
+TASKID: 22
+VAR_1: 0
+VAR_2: 0
+VAR_2 is 0
+ASSERT:Wrong value of VAR_2! expected:<106> but was:<0>
+test_results_file_case2
+TASKID: 22
+VAR_1: 0
+VAR_2: 0
+MD5 is d41d8cd98f00b204e9800998ecf8427e
+ASSERT:File 'results.txt' has wrong contents! expected:<e975108f3f35cfa6758814656927ba92> but was:<d41d8cd98f00b204e9800998ecf8427e>
 
-# Номер варианта
-TASKID=22
+Ran 7 tests.
 
-# VAR_1: количество строк в файле (динамически)
-VAR_1=$(wc -l < dns-tunneling.log)
-
-# Обработка DNS-запросов типа A и создание results.txt
-# Используем пайплайны как в методичке - стр. 1-2
-grep $'\t1\t' dns-tunneling.log | 
-    awk -F'\t' '{print tolower($15)}' |
-    sort |
-    uniq -c |
-    awk '{print $2 "\t" $1}' |
-    sort -k2,2nr -k1,1 > results.txt
-
-# VAR_2: количество строк в results.txt (динамически)  
-VAR_2=$(wc -l < results.txt)
-
-# Вывод для проверки
-echo "TASKID: $TASKID"
-echo "VAR_1: $VAR_1"
-echo "VAR_2: $VAR_2"
+FAILED (failures=6)
