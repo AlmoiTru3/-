@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+TASKID=22
+
+# Переменные
+VAR_1=0
+VAR_2=0
+declare -A domain_count
+
+# Чтение файла и обработка
+while IFS=$'\t' read -r -a fields; do
+    ((VAR_1++))  # счетчик строк
+    
+    # Проверяем тип запроса A (код 1)
+    if [[ "${fields[10]}" == "1" ]]; then
+        # Приведение к нижнему регистру средствами Bash
+        domain="${fields[14],,}"
+        
+        # Увеличиваем счетчик для домена
+        if [[ -z "${domain_count[$domain]}" ]]; then
+            domain_count["$domain"]=1
+        else
+            ((domain_count["$domain"]++))
+        fi
+    fi
+done < dns-tunneling.log
+
+# Подготовка данных для сортировки
+declare -a results
+for domain in "${!domain_count[@]}"; do
+    count="${domain_count[$domain]}"
+    # Форматируем для сортировки: счетчик+домен
+    results+=("$(printf "%05d\t%s" "$count" "$domain")")
+done
+
+# Сортировка пузырьком (по убыванию count, затем по возрастанию domain)
+for ((i=0; i<${#results[@]}-1; i++)); do
+    for ((j=0; j<${#results[@]}-i-1; j++)); do
+        current="${results[j]}"
+        next="${results[j+1]}"
+        
+        current_count="${current%%$'\t'*}"
+        current_domain="${current#*$'\t'}"
+        next_count="${next%%$'\t'*}"
+        next_domain="${next#*$'\t'}"
+        
+        # Сравниваем сначала по количеству (убывание), затем по домену (возрастание)
+        if [[ "$current_count" -lt "$next_count" ]] || \
+           [[ "$current_count" -eq "$next_count" && "$current_domain" > "$next_domain" ]]; then
+            # Меняем местами
+            temp="${results[j]}"
+            results[j]="${results[j+1]}"
+            results[j+1]="$temp"
+        fi
+    done
+done
+
+# Запись в файл и подсчет VAR_2
+exec 3> results.txt  # открываем файл для записи
+for result in "${results[@]}"; do
+    count="${result%%$'\t'*}"
+    count=$((10#$count))  # убираем ведущие нули
+    domain="${result#*$'\t'}"
+    printf "%s\t%d\n" "$domain" "$count" >&3
+    ((VAR_2++))
+done
+exec 3>&-  # закрываем файл
+
+echo "TASKID: $TASKID"
+echo "VAR_1: $VAR_1"
+echo "VAR_2: $VAR_2"
