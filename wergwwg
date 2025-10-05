@@ -3,51 +3,21 @@
 # Номер варианта
 TASKID=22
 
-# VAR_1: количество строк в файле (динамически)
+# VAR_1: количество строк в файле
 VAR_1=$(wc -l < dns-tunneling.log)
 
-# Обработка DNS-запросов типа A и создание results.txt
-grep $'\t1\t' dns-tunneling.log | 
+# Обработка DNS-запросов типа A
+{
+    grep $'\t1\t' dns-tunneling.log | 
     awk -F'\t' '{print tolower($15)}' |
     sort |
     uniq -c |
     awk '{print $2 "\t" $1}' |
-    sort -k2,2nr -k1,1 > results.txt
+    sort -k2,2nr -k1,1
+} > results.txt
 
-# VAR_2: количество строк в results.txt (динамически)  
+# VAR_2: количество строк в results.txt
 VAR_2=$(wc -l < results.txt)
-
-# Экспортируем переменные для тестов
-export TASKID
-export VAR_1  
-export VAR_2
-
-# Вывод для проверки
-echo "TASKID: $TASKID"
-echo "VAR_1: $VAR_1"
-echo "VAR_2: $VAR_2"
-
-
-
-альтерн:
-#!/usr/bin/env bash
-
-# Номер варианта
-export TASKID=22
-
-# VAR_1: количество строк в файле (динамически)
-export VAR_1=$(wc -l < dns-tunneling.log)
-
-# Обработка DNS-запросов типа A и создание results.txt
-grep $'\t1\t' dns-tunneling.log | 
-    awk -F'\t' '{print tolower($15)}' |
-    sort |
-    uniq -c |
-    awk '{print $2 "\t" $1}' |
-    sort -k2,2nr -k1,1 > results.txt
-
-# VAR_2: количество строк в results.txt (динамически)  
-export VAR_2=$(wc -l < results.txt)
 
 # Вывод для проверки
 echo "TASKID: $TASKID"
