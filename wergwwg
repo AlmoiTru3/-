@@ -251,19 +251,247 @@ int lab2_init() {
     return 0;
 }
 
-ubli@ubli-VirtualBox:~/Lab2/os-task2-AlmoiTru3$ g++ lab2.cpp main.cpp -lpthread
-lab2.cpp:253:5: error: redefinition of ‘int lab2_init()’
-  253 | int lab2_init()
-      |     ^~~~~~~~~
-lab2.cpp:155:5: note: ‘int lab2_init()’ previously defined here
-  155 | int lab2_init() {
-      |     ^~~~~~~~~
-lab2.cpp: In function ‘int lab2_init()’:
-lab2.cpp:257:20: error: expected primary-expression before ‘...’ token
-  257 |     pthread_create(...);
-      |                    ^~~
-lab2.cpp:260:18: error: expected primary-expression before ‘...’ token
-  260 |     pthread_join(...);
-      |                  ^~~
-g++: fatal error: cannot execute ‘as’: execvp: Нет такого файла или каталога
-compilation terminated.
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+#include "lab2.h"
+#include <iostream>
+#include <pthread.h>
+#include <semaphore.h>
+#include <cstring>
+
+// Объявляем всё необходимое
+pthread_mutex_t print_mutex;
+pthread_t threads[8]; // 0=a,1=b,2=c,3=d1,4=d2,5=e,6=f,7=g
+
+// Семафоры для синхронизации b,c,d
+sem_t sem_b, sem_c, sem_d;
+
+// Функции потоков
+void* thread_a(void* arg);
+void* thread_b(void* arg);
+void* thread_c(void* arg);
+void* thread_d_part1(void* arg);
+void* thread_d_part2(void* arg);
+void* thread_e(void* arg);
+void* thread_f(void* arg);
+void* thread_g(void* arg);
+
+unsigned int lab2_thread_graph_id() {
+    return 6;
+}
+
+const char* lab2_unsynchronized_threads() {
+    return "deg";
+}
+
+const char* lab2_sequential_threads() {
+    return "bcd";
+}
+
+// Поток a - работает первый, один
+void* thread_a(void* arg) {
+    int iterations = 4;
+    
+    for (int i = 0; i < iterations; ++i) {
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "a" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        computation();
+    }
+    return nullptr;
+}
+
+// Поток b - синхронизированный с c и d
+void* thread_b(void* arg) {
+    int iterations = 8;
+    
+    for (int i = 0; i < iterations; ++i) {
+        sem_wait(&sem_b);
+        
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "b" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        
+        computation();
+        
+        sem_post(&sem_c);
+    }
+    return nullptr;
+}
+
+// Поток c - синхронизированный с b и d
+void* thread_c(void* arg) {
+    int iterations = 8;
+    
+    for (int i = 0; i < iterations; ++i) {
+        sem_wait(&sem_c);
+        
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "c" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        
+        computation();
+        
+        sem_post(&sem_d);
+    }
+    return nullptr;
+}
+
+// Поток d в первой группе (синхронизированный с b и c)
+void* thread_d_part1(void* arg) {
+    int iterations = 8;
+    
+    for (int i = 0; i < iterations; ++i) {
+        sem_wait(&sem_d);
+        
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "d" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        
+        computation();
+        
+        sem_post(&sem_b);
+    }
+    return nullptr;
+}
+
+// Поток d во второй группе (несинхронизированный с e и g)
+void* thread_d_part2(void* arg) {
+    int iterations = 4;
+    
+    for (int i = 0; i < iterations; ++i) {
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "d" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        computation();
+    }
+    return nullptr;
+}
+
+// Поток e - несинхронизированный с d и g
+void* thread_e(void* arg) {
+    int iterations = 4;
+    
+    for (int i = 0; i < iterations; ++i) {
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "e" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        computation();
+    }
+    return nullptr;
+}
+
+// Поток f - работает последний, один
+void* thread_f(void* arg) {
+    int iterations = 4;
+    
+    for (int i = 0; i < iterations; ++i) {
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "f" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        computation();
+    }
+    return nullptr;
+}
+
+// Поток g - несинхронизированный с d и e
+void* thread_g(void* arg) {
+    int iterations = 4;
+    
+    for (int i = 0; i < iterations; ++i) {
+        pthread_mutex_lock(&print_mutex);
+        std::cout << "g" << std::flush;
+        pthread_mutex_unlock(&print_mutex);
+        computation();
+    }
+    return nullptr;
+}
+
+int lab2_init() {
+    int err;
+    
+    // Инициализация мьютекса для защиты вывода
+    if (pthread_mutex_init(&print_mutex, NULL) != 0) {
+        std::cerr << "Mutex init failed" << std::endl;
+        return 1;
+    }
+    
+    // Инициализация семафоров для синхронизации b,c,d
+    if (sem_init(&sem_b, 0, 1) != 0) {
+        std::cerr << "Semaphore B init failed" << std::endl;
+        return 1;
+    }
+    if (sem_init(&sem_c, 0, 0) != 0) {
+        std::cerr << "Semaphore C init failed" << std::endl;
+        return 1;
+    }
+    if (sem_init(&sem_d, 0, 0) != 0) {
+        std::cerr << "Semaphore D init failed" << std::endl;
+        return 1;
+    }
+
+    // ЭТАП 1: Поток a
+    err = pthread_create(&threads[0], NULL, thread_a, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread A. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    pthread_join(threads[0], NULL);
+    
+    // ЭТАП 2: Синхронизированные потоки b, c, d
+    err = pthread_create(&threads[1], NULL, thread_b, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread B. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    err = pthread_create(&threads[2], NULL, thread_c, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread C. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    err = pthread_create(&threads[3], NULL, thread_d_part1, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread D1. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    
+    pthread_join(threads[1], NULL);
+    pthread_join(threads[2], NULL);
+    pthread_join(threads[3], NULL);
+    
+    // ЭТАП 3: Несинхронизированные потоки d, e, g
+    err = pthread_create(&threads[4], NULL, thread_d_part2, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread D2. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    err = pthread_create(&threads[5], NULL, thread_e, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread E. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    err = pthread_create(&threads[7], NULL, thread_g, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread G. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    
+    pthread_join(threads[4], NULL);
+    pthread_join(threads[5], NULL);
+    pthread_join(threads[7], NULL);
+    
+    // ЭТАП 4: Поток f
+    err = pthread_create(&threads[6], NULL, thread_f, NULL);
+    if (err != 0) {
+        std::cerr << "Can't create thread F. Error: " << strerror(err) << std::endl;
+        return 1;
+    }
+    pthread_join(threads[6], NULL);
+    
+    // Освобождение ресурсов
+    pthread_mutex_destroy(&print_mutex);
+    sem_destroy(&sem_b);
+    sem_destroy(&sem_c);
+    sem_destroy(&sem_d);
+    
+    return 0;
+}
