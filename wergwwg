@@ -250,3 +250,20 @@ int lab2_init() {
     std::cout << "\n=== Программа завершена ===" << std::endl;
     return 0;
 }
+
+ubli@ubli-VirtualBox:~/Lab2/os-task2-AlmoiTru3$ g++ lab2.cpp main.cpp -lpthread
+lab2.cpp:253:5: error: redefinition of ‘int lab2_init()’
+  253 | int lab2_init()
+      |     ^~~~~~~~~
+lab2.cpp:155:5: note: ‘int lab2_init()’ previously defined here
+  155 | int lab2_init() {
+      |     ^~~~~~~~~
+lab2.cpp: In function ‘int lab2_init()’:
+lab2.cpp:257:20: error: expected primary-expression before ‘...’ token
+  257 |     pthread_create(...);
+      |                    ^~~
+lab2.cpp:260:18: error: expected primary-expression before ‘...’ token
+  260 |     pthread_join(...);
+      |                  ^~~
+g++: fatal error: cannot execute ‘as’: execvp: Нет такого файла или каталога
+compilation terminated.
