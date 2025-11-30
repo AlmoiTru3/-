@@ -1,9 +1,13 @@
+cd test/gtest
+GTEST_DIR=$(pwd)
+g++ -isystem "${GTEST_DIR}"/include -I"${GTEST_DIR}" -pthread -c "${GTEST_DIR}"/src/gtest-all.cc 
+ar -rv libgtest.a gtest-all.o
 #include "lab2.h"
 #include <iostream>
 #include <pthread.h>
 #include <semaphore.h>
 #include <cstring>
-
+ААААААААААААААААААААААААААААААААААААААААА
 // Объявляем всё необходимое
 pthread_mutex_t print_mutex;
 pthread_t threads[8]; // a,b,c,d1,d2,e,f,g - индексы: 0=a,1=b,2=c,3=d1,4=d2,5=e,6=f,7=g
