@@ -55,7 +55,7 @@ void* thread_b(void* arg) {
         
         pthread_mutex_lock(&print_mutex);
         std::cout << "b" << std::flush;
-        pthread_mutex_unlock(&print_mutex);
+        pthread_mutex_unlock(&print_mutex); // СРАЗУ ОСВОБОЖДАЕМ!
         
         computation();
         
@@ -73,7 +73,7 @@ void* thread_c(void* arg) {
         
         pthread_mutex_lock(&print_mutex);
         std::cout << "c" << std::flush;
-        pthread_mutex_unlock(&print_mutex);
+        pthread_mutex_unlock(&print_mutex); // СРАЗУ ОСВОБОЖДАЕМ!
         
         computation();
         
@@ -91,7 +91,7 @@ void* thread_d_part1(void* arg) {
         
         pthread_mutex_lock(&print_mutex);
         std::cout << "d" << std::flush;
-        pthread_mutex_unlock(&print_mutex);
+        pthread_mutex_unlock(&print_mutex); // СРАЗУ ОСВОБОЖДАЕМ!
         
         computation();
         
@@ -240,4 +240,4 @@ int lab2_init() {
     sem_destroy(&sem_d);
     
     return 0;
-} 
+}
