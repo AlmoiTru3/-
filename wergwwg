@@ -1,3 +1,11 @@
+# Перейди в корневую папку проекта (где лежат lab2.cpp, main.cpp)
+cd ~/Lab2/os-task2-AlnoiTrua
+
+# Запусти тесты из корневой директории
+g++ lab2.cpp test/tests.cpp -lpthread -lgtest -o runTests -I test/gtest/include -L test/gtest
+
+
+
 g++ ../lab2.cpp tests.cpp -lpthread -lgtest -o runTests -I gtest/include -L gtest
 ааааааааааааааааааааа
 cd test/gtest
